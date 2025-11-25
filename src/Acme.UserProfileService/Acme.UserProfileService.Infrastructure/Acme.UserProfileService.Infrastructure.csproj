@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Acme.UserProfileService.Application\Acme.UserProfileService.Application.csproj" />
+    <ProjectReference Include="..\Acme.UserProfileService.Domain\Acme.UserProfileService.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
