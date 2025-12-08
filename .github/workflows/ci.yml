@@ -1,0 +1,58 @@
+name: CI - Build & Test
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet: [ "9.0" ]     # change to the .NET SDK version you use, e.g. "7.0", "8.0"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet }}
+
+      - name: Restore NuGet packages
+        run: |
+          dotnet restore
+
+      - name: Build solution
+        run: |
+          dotnet build --no-restore --configuration Release
+
+      - name: Run unit tests
+        run: |
+          dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+
+      - name: Publish each API project (artifacts)
+        run: |
+        # Product Service
+        dotnet publish src/Acme.ProductService/Acme.ProductService.Api/ -c Release -o ./artifacts/ProductService
+
+        # User Service
+        dotnet publish src/Acme.UserService/Acme.UserService.Api/ -c Release -o ./artifacts/UserService
+
+        # Recommendation Service
+        dotnet publish src/Acme.RecommendationService/Acme.RecommendationService.Api/ -c Release -o ./artifacts/RecommendationService
+
+        # API Gateway
+        dotnet publish src/Acme.ApiGateway/Acme.ApiGateway/ -c Release -o ./artifacts/ApiGateway
+
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: acme-build-artifacts
+          path: artifacts
