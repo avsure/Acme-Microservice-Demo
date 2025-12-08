@@ -36,19 +36,20 @@ jobs:
         run: |
           dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
 
-      - name: Publish each API project (artifacts)
+     - name: Publish each API project (artifacts)
         run: |
         # Product Service
-        dotnet publish src/Acme.ProductService/Acme.ProductService.Api/ -c Release -o ./artifacts/ProductService
+        dotnet publish src/Acme.ProductService/Acme.ProductService.Api/Acme.ProductService.Api.csproj -c Release -o ./artifacts/ProductService
 
         # User Service
-        dotnet publish src/Acme.UserService/Acme.UserService.Api/ -c Release -o ./artifacts/UserService
+        dotnet publish src/Acme.UserService/Acme.UserService.Api/Acme.UserService.Api.csproj -c Release -o ./artifacts/UserService
 
         # Recommendation Service
-        dotnet publish src/Acme.RecommendationService/Acme.RecommendationService.Api/ -c Release -o ./artifacts/RecommendationService
+        dotnet publish src/Acme.RecommendationService/Acme.RecommendationService.Api/Acme.RecommendationService.Api.csproj -c Release -o ./artifacts/RecommendationService
 
         # API Gateway
-        dotnet publish src/Acme.ApiGateway/Acme.ApiGateway/ -c Release -o ./artifacts/ApiGateway
+        dotnet publish src/Acme.ApiGateway/Acme.ApiGateway/Acme.ApiGateway.csproj -c Release -o ./artifacts/ApiGateway
+
 
 
       - name: Upload build artifacts
