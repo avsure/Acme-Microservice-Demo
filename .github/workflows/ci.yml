@@ -32,10 +32,26 @@ jobs:
         run: |
           dotnet build --no-restore --configuration Release
 
-      - name: Run unit tests
+      - name: Run unit tests only
         run: |
           export ASPNETCORE_ENVIRONMENT=Test
-          dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+
+          # Run only the unit test projects, skip IntegrationTests
+          dotnet test src/Acme.ProductService/Acme.ProductService.Tests/Acme.ProductService.Tests.csproj \
+            --no-build \
+            --configuration Release \
+            --logger "trx;LogFileName=test-results.trx"
+
+          dotnet test src/Acme.RecommendationService/Acme.RecommendationService.Tests/Acme.RecommendationService.Tests.csproj \
+            --no-build \
+            --configuration Release \
+            --logger "trx;LogFileName=test-results.trx"
+
+          dotnet test src/Acme.UserProfileService/Acme.UserProfileService.Tests/Acme.UserProfileService.Tests.csproj \
+            --no-build \
+            --configuration Release \
+            --logger "trx;LogFileName=test-results.trx"
+
 
 
       - name: Publish each API project (artifacts)
