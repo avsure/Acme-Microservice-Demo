@@ -1,6 +1,8 @@
-﻿using Acme.ProductService.Api.DTOs;
+﻿using Acme.Contracts;
+using Acme.ProductService.Api.DTOs;
 using Acme.ProductService.Application.DTOs;
 using Acme.ProductService.Application.Interfaces;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Acme.ProductService.Api.Controllers
@@ -10,10 +12,11 @@ namespace Acme.ProductService.Api.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly IProductService _productService;
-
-        public ProductsController(IProductService productService)
+        private readonly IPublishEndpoint _publishEndpoint;
+        public ProductsController(IProductService productService, IPublishEndpoint publishEndpoint)
         {
             _productService = productService;
+            _publishEndpoint = publishEndpoint;
         }
 
         [HttpGet]
@@ -47,8 +50,18 @@ namespace Acme.ProductService.Api.Controllers
                     new ProductCreateModel(request.Name, request.Price,string.Empty,string.Empty)
                  );
 
+            // get domain/model data directly
+            var product = await _productService.GetProductByIdAsync(id);
+
+            await _publishEndpoint.Publish<IProductCreated>(new
+            {
+                ProductId = product.Id,
+                Name = product.Name,
+                Price = product.Price,
+                CreatedAt = DateTime.UtcNow
+            });
+
             return CreatedAtAction(nameof(Get), new { id }, null);
         }
-
     }
 }

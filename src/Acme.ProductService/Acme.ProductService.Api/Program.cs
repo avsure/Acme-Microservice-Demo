@@ -3,6 +3,7 @@ using Acme.ProductService.Application.Services;
 using Acme.ProductService.Infrastructure;
 using Acme.ProductService.Infrastructure.Persistence;
 using Acme.ProductService.Infrastructure.Repositories;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 
 public partial class Program
@@ -11,6 +12,39 @@ public partial class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        //CORS
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAngular",
+                policy =>
+                {
+                    policy.WithOrigins("http://localhost:4200")
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+        });
+
+
+        //RabbitMq
+
+        var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
+        var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
+        var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
+     
+        builder.Services.AddMassTransit(x =>
+        {
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                cfg.Host(rabbitHost, "/", h =>
+                {
+                    h.Username(rabbitUser);
+                    h.Password(rabbitPass);
+                });
+                // optional: endpoint name formatter
+                cfg.ConfigureEndpoints(context);
+            });
+        });
+        
         //Controllers
         builder.Services.AddControllers();
 
@@ -28,6 +62,8 @@ public partial class Program
         builder.Services.AddSwaggerGen();
 
         var app = builder.Build();
+
+        app.UseCors("AllowAngular");
 
         if (app.Environment.IsDevelopment())
         {

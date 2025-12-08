@@ -1,0 +1,6 @@
+@Acme.ApiGateway_HostAddress = http://localhost:5014
+
+GET {{Acme.ApiGateway_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

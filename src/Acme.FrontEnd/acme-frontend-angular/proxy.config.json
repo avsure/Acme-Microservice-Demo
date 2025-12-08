@@ -1,0 +1,14 @@
+{
+  "/products": {
+    "target": "http://localhost:5047",
+    "secure": false
+  },
+  "/users": {
+    "target": "https://localhost:7097",
+    "secure": false
+  },
+  "/recommendations": {
+    "target": "http://localhost:5171",
+    "secure": false
+  }
+}

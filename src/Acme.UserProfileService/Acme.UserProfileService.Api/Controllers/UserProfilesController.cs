@@ -1,6 +1,9 @@
-﻿using Acme.UserProfileService.Api.DTOs;
+﻿using Acme.Contracts;
+using Acme.UserProfileService.Api.DTOs;
 using Acme.UserProfileService.Application.DTOs;
 using Acme.UserProfileService.Application.Interfaces;
+using MassTransit;
+using MassTransit.Transports;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Acme.UserProfileService.Api.Controllers
@@ -11,24 +14,36 @@ namespace Acme.UserProfileService.Api.Controllers
     public class UserProfilesController : ControllerBase
     {
         private readonly IUserProfileService _service;
+        private readonly IPublishEndpoint _publishEndpoint;
 
-        public UserProfilesController(IUserProfileService service)
+        public UserProfilesController(IUserProfileService service, IPublishEndpoint publishEndpoint)
         {
             _service = service;
+            _publishEndpoint = publishEndpoint;
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(UserProfileApiDto dto)
         {
-            var userProfileDto = new UserProfileDto()
+            var id = await _service.CreateAsync(new UserProfileDto
             {
                 Id = Guid.NewGuid(),
                 Name = dto.Name,
                 Email = dto.Email,
                 Age = dto.Age
-            };
-            
-            return CreatedAtAction(nameof(GetById), new { id = userProfileDto.Id }, null);
+            });
+
+            var userprofile = await _service.GetByIdAsync(id);
+          
+            await _publishEndpoint.Publish<IUserCreated>(new
+            {
+                UserId = userprofile.Id,
+                Email = userprofile.Email,
+                DisplayName = userprofile.Name,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            return CreatedAtAction(nameof(GetById), new { id = userprofile.Id }, null);
         }
 
         [HttpGet("{id:guid}")]
@@ -45,6 +60,4 @@ namespace Acme.UserProfileService.Api.Controllers
             return Ok(users);
         }
     }
-
-
 }

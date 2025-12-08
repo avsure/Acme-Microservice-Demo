@@ -5,17 +5,22 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
 	<PreserveCompilationContext>true</PreserveCompilationContext>
+	<UserSecretsId>591183ce-2c2a-4071-948a-7c7126712d0f</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MassTransit" Version="8.5.7" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.5.7" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.11" />
+    
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
 	<InternalsVisibleTo Include="Acme.ProductService.IntegrationTests" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Acme.Contracts\Acme.Contracts\Acme.Contracts.csproj" />
     <ProjectReference Include="..\Acme.ProductService.Application\Acme.ProductService.Application.csproj" />
     <ProjectReference Include="..\Acme.ProductService.Infrastructure\Acme.ProductService.Infrastructure.csproj" />
   </ItemGroup>

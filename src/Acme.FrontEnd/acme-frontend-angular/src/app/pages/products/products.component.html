@@ -1,0 +1,15 @@
+<h2>Products</h2>
+
+<!-- show loading state -->
+<div *ngIf="loading">Loading products…</div>
+
+<!-- list when present -->
+<ul *ngIf="!loading && products?.length; else noItems">
+  <li *ngFor="let item of products; trackBy: trackById">
+    {{ item.name }} — ₹{{ item.price }}
+  </li>
+</ul>
+
+<ng-template #noItems>
+  <div *ngIf="!loading">No items to display.</div>
+</ng-template>

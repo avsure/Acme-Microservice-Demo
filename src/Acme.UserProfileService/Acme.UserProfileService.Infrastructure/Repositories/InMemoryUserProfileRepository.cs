@@ -5,7 +5,7 @@ namespace Acme.UserProfileService.Infrastructure.Repositories
 {
     public class InMemoryUserProfileRepository : IUserProfileRepository
     {
-        private readonly List<UserProfile> _db = new()
+        private static readonly List<UserProfile> _db = new()
                 {
                     new UserProfile( "Anita", "anita@example.com", 35),
                     new UserProfile( "John", "john@example.com", 30),
