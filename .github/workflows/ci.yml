@@ -60,7 +60,7 @@ jobs:
           dotnet publish src/Acme.ProductService/Acme.ProductService.Api/Acme.ProductService.Api.csproj -c Release -o ./artifacts/ProductService
 
           # User Service
-          dotnet publish src/Acme.UserService/Acme.UserService.Api/Acme.UserService.Api.csproj -c Release -o ./artifacts/UserService
+          dotnet publish src/Acme.UserProfileService/Acme.UserProfileService.Api/Acme.UserProfileService.Api.csproj -c Release -o ./artifacts/UserProfileService
 
           # Recommendation Service
           dotnet publish src/Acme.RecommendationService/Acme.RecommendationService.Api/Acme.RecommendationService.Api.csproj -c Release -o ./artifacts/RecommendationService
