@@ -34,7 +34,9 @@ jobs:
 
       - name: Run unit tests
         run: |
+          export ASPNETCORE_ENVIRONMENT=Test
           dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+
 
       - name: Publish each API project (artifacts)
         run: |

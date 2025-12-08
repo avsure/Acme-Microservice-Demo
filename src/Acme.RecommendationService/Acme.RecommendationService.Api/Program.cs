@@ -1,4 +1,4 @@
-using Acme.RecommendationService.Api.Consumer;
+﻿using Acme.RecommendationService.Api.Consumer;
 using Acme.RecommendationService.Infrastructure;
 using MassTransit;
 
@@ -17,38 +17,49 @@ builder.Services.AddCors(options =>
         });
 });
 
-var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
-var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
-var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
+// Detect environment
+var env = builder.Environment.EnvironmentName;
 
-
-builder.Services.AddMassTransit(x =>
+if (!env.Equals("Test", StringComparison.OrdinalIgnoreCase))
 {
-    x.AddConsumer<ProductCreatedConsumer>();
-    x.AddConsumer<UserCreatedConsumer>();
+    var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
+    var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
+    var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
 
-    x.UsingRabbitMq((context, cfg) =>
+
+    builder.Services.AddMassTransit(x =>
     {
-        cfg.Host(rabbitHost, "/", h =>
-        {
-            h.Username(rabbitUser);
-            h.Password(rabbitPass);
-        });
+        x.AddConsumer<ProductCreatedConsumer>();
+        x.AddConsumer<UserCreatedConsumer>();
 
-        cfg.ReceiveEndpoint("recommendation-product-created", e =>
+        x.UsingRabbitMq((context, cfg) =>
         {
-            e.ConfigureConsumer<ProductCreatedConsumer>(context);
-        });
+            cfg.Host(rabbitHost, "/", h =>
+            {
+                h.Username(rabbitUser);
+                h.Password(rabbitPass);
+            });
 
-        cfg.ReceiveEndpoint("recommendation-user-created", e =>
-        {
-            e.ConfigureConsumer<UserCreatedConsumer>(context);
-        });
+            cfg.ReceiveEndpoint("recommendation-product-created", e =>
+            {
+                e.ConfigureConsumer<ProductCreatedConsumer>(context);
+            });
 
-        // optional: cfg.ConfigureEndpoints(context);
+            cfg.ReceiveEndpoint("recommendation-user-created", e =>
+            {
+                e.ConfigureConsumer<UserCreatedConsumer>(context);
+            });
+
+            // optional: cfg.ConfigureEndpoints(context);
+        });
     });
-});
 
+}
+else
+{
+    // Test environment → skip real RabbitMQ, optional in-memory harness
+    builder.Services.AddMassTransitTestHarness();
+}
 
 
 // Add services to the container.

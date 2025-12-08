@@ -1,4 +1,4 @@
-using Acme.UserProfileService.Infrastructure;
+﻿using Acme.UserProfileService.Infrastructure;
 using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,26 +15,38 @@ builder.Services.AddCors(options =>
         });
 });
 
-var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
-var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
-var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
+// Detect environment
+var env = builder.Environment.EnvironmentName;
 
-builder.Services.AddMassTransit(x =>
+if (!env.Equals("Test", StringComparison.OrdinalIgnoreCase))
 {
-    // No consumers here, only configure RabbitMQ so we can publish.
-    x.UsingRabbitMq((context, cfg) =>
+    var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
+    var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
+    var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
+
+    builder.Services.AddMassTransit(x =>
     {
-        cfg.Host(rabbitHost, "/", h =>
+        // No consumers here, only configure RabbitMQ so we can publish.
+        x.UsingRabbitMq((context, cfg) =>
         {
-            h.Username(rabbitUser);
-            h.Password(rabbitPass);
+            cfg.Host(rabbitHost, "/", h =>
+            {
+                h.Username(rabbitUser);
+                h.Password(rabbitPass);
+            });
+
+            // optional: endpoint name formatter
+            cfg.ConfigureEndpoints(context);
         });
-
-        // optional: endpoint name formatter
-        cfg.ConfigureEndpoints(context);
     });
-});
+}
+else
+{
+    // Test environment → skip real RabbitMQ, optional in-memory harness
+    builder.Services.AddMassTransitTestHarness();
+}
 
+    
 
 // Add services to the container.
 

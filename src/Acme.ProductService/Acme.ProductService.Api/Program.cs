@@ -1,4 +1,4 @@
-using Acme.ProductService.Application.Interfaces;
+﻿using Acme.ProductService.Application.Interfaces;
 using Acme.ProductService.Application.Services;
 using Acme.ProductService.Infrastructure;
 using Acme.ProductService.Infrastructure.Persistence;
@@ -24,27 +24,38 @@ public partial class Program
                 });
         });
 
+        // Detect environment
+        var env = builder.Environment.EnvironmentName;
 
-        //RabbitMq
-
-        var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
-        var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
-        var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
-     
-        builder.Services.AddMassTransit(x =>
+        // --- RabbitMQ / MassTransit ---
+        if (!env.Equals("Test", StringComparison.OrdinalIgnoreCase))
         {
-            x.UsingRabbitMq((context, cfg) =>
+            var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
+            var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
+            var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
+
+            builder.Services.AddMassTransit(x =>
             {
-                cfg.Host(rabbitHost, "/", h =>
+                x.UsingRabbitMq((context, cfg) =>
                 {
-                    h.Username(rabbitUser);
-                    h.Password(rabbitPass);
+                    cfg.Host(rabbitHost, "/", h =>
+                    {
+                        h.Username(rabbitUser);
+                        h.Password(rabbitPass);
+                    });
+
+                    // Optional: endpoint name formatter
+                    cfg.ConfigureEndpoints(context);
                 });
-                // optional: endpoint name formatter
-                cfg.ConfigureEndpoints(context);
             });
-        });
-        
+
+        }
+        else
+        {
+            // Test environment → skip real RabbitMQ, optional in-memory harness
+            builder.Services.AddMassTransitTestHarness();
+        }
+
         //Controllers
         builder.Services.AddControllers();
 
