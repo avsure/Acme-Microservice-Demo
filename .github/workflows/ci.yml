@@ -78,26 +78,31 @@ jobs:
 # CD : DEPLOY TO DEV (NO DOCKER)
 # ---------------------------------------
   deploy-dev:
-    name: Deploy to DEV
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    environment: dev   # 👈 GitHub Environment
+  name: Deploy to DEV
+  needs: build-and-test
+  runs-on: ubuntu-latest
+  environment: dev
 
-    steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: acme-build-artifacts
+  steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: acme-build-artifacts
 
-      - name: Deploy to DEV environment
-        run: |
-          echo "Starting deployment to DEV..."
+    - name: Deploy to DEV environment
+      run: |
+        echo "Starting deployment to DEV..."
 
-          mkdir -p /deploy/dev
+        DEPLOY_DIR="$GITHUB_WORKSPACE/deploy/dev"
 
-          cp -r ProductService /deploy/dev/
-          cp -r UserProfileService /deploy/dev/
-          cp -r RecommendationService /deploy/dev/
-          cp -r ApiGateway /deploy/dev/
+        mkdir -p "$DEPLOY_DIR"
 
-          echo "DEV deployment completed successfully"
+        cp -r ProductService "$DEPLOY_DIR/"
+        cp -r UserProfileService "$DEPLOY_DIR/"
+        cp -r RecommendationService "$DEPLOY_DIR/"
+        cp -r ApiGateway "$DEPLOY_DIR/"
+
+        echo "Files deployed to:"
+        ls -R "$DEPLOY_DIR"
+
+        echo "DEV deployment completed successfully"
