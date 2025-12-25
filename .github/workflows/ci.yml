@@ -73,3 +73,31 @@ jobs:
         with:
           name: acme-build-artifacts
           path: artifacts
+
+# ---------------------------------------
+# CD : DEPLOY TO DEV (NO DOCKER)
+# ---------------------------------------
+  deploy-dev:
+    name: Deploy to DEV
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    environment: dev   # 👈 GitHub Environment
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: acme-build-artifacts
+
+      - name: Deploy to DEV environment
+        run: |
+          echo "Starting deployment to DEV..."
+
+          mkdir -p /deploy/dev
+
+          cp -r ProductService /deploy/dev/
+          cp -r UserProfileService /deploy/dev/
+          cp -r RecommendationService /deploy/dev/
+          cp -r ApiGateway /deploy/dev/
+
+          echo "DEV deployment completed successfully"
