@@ -82,11 +82,22 @@ jobs:
 # CD : DEPLOY PRODUCT SERVICE TO AZURE
 # ---------------------------------------
   deploy-product-dev:
+    name: Deploy Product Service to Azure (DEV)
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: acme-build-artifacts
+
       - name: Deploy Product Service to Azure
         uses: azure/webapps-deploy@v3
         with:
           app-name: acme-product-dev
           publish-profile: ${{ secrets.AZURE_PRODUCTSERVICE_PUBLISH_PROFILE }}
           package: ProductService
+
 
 
