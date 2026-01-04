@@ -99,5 +99,44 @@ jobs:
           publish-profile: ${{ secrets.AZURE_PRODUCTSERVICE_PUBLISH_PROFILE }}
           package: ProductService
 
+# ---------------------------------------
+# CD : DEPLOY USER PROFILE SERVICE
+# ---------------------------------------
+  deploy-userprofile-dev:
+    name: Deploy UserProfile Service to Azure (DEV)
+    needs: build-and-test
+    runs-on: ubuntu-latest
 
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: acme-build-artifacts
 
+      - name: Deploy UserProfile Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: acme-userprofile-dev
+          publish-profile: ${{ secrets.AZURE_USERPROFILE_PUBLISH_PROFILE }}
+          package: UserProfileService
+
+# ---------------------------------------
+# CD : DEPLOY RECOMMENDATION SERVICE
+# ---------------------------------------
+  deploy-recommendation-dev:
+    name: Deploy Recommendation Service to Azure (DEV)
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: acme-build-artifacts
+
+      - name: Deploy Recommendation Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: acme-recommendation-dev
+          publish-profile: ${{ secrets.AZURE_RECOMMENDATION_PUBLISH_PROFILE }}
+          package: RecommendationService
