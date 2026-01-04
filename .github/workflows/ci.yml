@@ -75,10 +75,10 @@ jobs:
           path: artifacts
 
 # ---------------------------------------
-# CD : DEPLOY TO DEV (NO DOCKER)
+# CD : DEPLOY PRODUCT SERVICE TO AZURE
 # ---------------------------------------
-  deploy-dev:
-    name: Deploy to DEV
+  deploy-product-dev:
+    name: Deploy Product Service to Azure (DEV)
     needs: build-and-test
     runs-on: ubuntu-latest
     environment: dev
@@ -89,20 +89,17 @@ jobs:
         with:
           name: acme-build-artifacts
 
-      - name: Deploy to DEV environment
-        run: |
-          echo "Starting deployment to DEV..."
+      - name: Azure Login (RBAC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
 
-          DEPLOY_DIR="$GITHUB_WORKSPACE/deploy/dev"
+      - name: Deploy Product Service to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: acme-product-dev
+          package: ProductService
 
-          mkdir -p "$DEPLOY_DIR"
-
-          cp -r ProductService "$DEPLOY_DIR/"
-          cp -r UserProfileService "$DEPLOY_DIR/"
-          cp -r RecommendationService "$DEPLOY_DIR/"
-          cp -r ApiGateway "$DEPLOY_DIR/"
-
-          echo "Files deployed to:"
-          ls -R "$DEPLOY_DIR"
-
-          echo "DEV deployment completed successfully"
