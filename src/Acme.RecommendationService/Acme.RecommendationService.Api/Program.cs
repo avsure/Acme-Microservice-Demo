@@ -17,6 +17,9 @@ builder.Services.AddCors(options =>
         });
 });
 
+// Application Insights
+builder.Services.AddApplicationInsightsTelemetry();
+
 // Detect environment
 var env = builder.Environment.EnvironmentName;
 

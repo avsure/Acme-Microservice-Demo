@@ -72,6 +72,9 @@ public partial class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
+        // Application Insights
+        builder.Services.AddApplicationInsightsTelemetry();
+
         var app = builder.Build();
 
         app.UseCors("AllowAngular");
