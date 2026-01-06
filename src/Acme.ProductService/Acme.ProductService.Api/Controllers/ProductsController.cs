@@ -60,6 +60,49 @@ namespace Acme.ProductService.Api.Controllers
             return Ok(new Product_Dto(product.Id, product.Name, product.Price));
         }
 
+        //[HttpPost]
+        //[Consumes("application/json")]
+        //public async Task<IActionResult> Create([FromBody] CreateProductRequest request)
+        //{
+        //    _logger.LogInformation("POST /api/products reached");
+
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
+
+        //    var id = await _productService.CreateProductAsync(
+        //            new ProductCreateModel(request.Name, request.Price,string.Empty,string.Empty)
+        //         );
+
+        //    var correlationId = _httpContextAccessor.HttpContext?
+        //                .Items["X-Correlation-ID"]?
+        //                .ToString();
+
+        //    // get domain/model data directly
+        //    var product = await _productService.GetProductByIdAsync(id);
+
+        //    await _publishEndpoint.Publish<IProductCreated>(new
+        //    {
+        //        ProductId = product.Id,
+        //        Name = product.Name,
+        //        Price = product.Price,
+        //        CreatedAt = DateTime.UtcNow
+        //    },
+        //    context =>
+        //    {
+        //        if (!string.IsNullOrEmpty(correlationId))
+        //        {
+        //            context.Headers.Set("X-Correlation-ID", correlationId);
+        //        }
+        //    }) ;
+
+        //    _logger.LogInformation("Published ProductCreated event for ProductId: {ProductId}", product.Id);
+
+        //    return StatusCode(StatusCodes.Status201Created);
+        //}
+
+
         [HttpPost]
         [Consumes("application/json")]
         public async Task<IActionResult> Create([FromBody] CreateProductRequest request)
@@ -71,22 +114,20 @@ namespace Acme.ProductService.Api.Controllers
                 return BadRequest(ModelState);
             }
 
-            var id = await _productService.CreateProductAsync(
-                    new ProductCreateModel(request.Name, request.Price,string.Empty,string.Empty)
-                 );
-
             var correlationId = _httpContextAccessor.HttpContext?
-                        .Items["X-Correlation-ID"]?
-                        .ToString();
+                .Items["X-Correlation-ID"]?
+                .ToString();
 
-            // get domain/model data directly
-            var product = await _productService.GetProductByIdAsync(id);
+            var id = await _productService.CreateProductAsync(
+                new ProductCreateModel(request.Name, request.Price, string.Empty, string.Empty)
+            );
 
-            await _publishEndpoint.Publish<IProductCreated>(new
+            // 🔥 Fire-and-forget publish (DO NOT BLOCK HTTP RESPONSE)
+            _ = _publishEndpoint.Publish<IProductCreated>(new
             {
-                ProductId = product.Id,
-                Name = product.Name,
-                Price = product.Price,
+                ProductId = id,
+                Name = request.Name,
+                Price = request.Price,
                 CreatedAt = DateTime.UtcNow
             },
             context =>
@@ -95,11 +136,14 @@ namespace Acme.ProductService.Api.Controllers
                 {
                     context.Headers.Set("X-Correlation-ID", correlationId);
                 }
-            }) ;
+            });
 
-            _logger.LogInformation("Published ProductCreated event for ProductId: {ProductId}", product.Id);
+            _logger.LogInformation(
+                "Product created. ProductId: {ProductId}, CorrelationId: {CorrelationId}",
+                id, correlationId);
 
             return StatusCode(StatusCodes.Status201Created);
         }
+
     }
 }
