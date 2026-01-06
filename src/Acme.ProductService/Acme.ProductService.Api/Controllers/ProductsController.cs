@@ -99,7 +99,7 @@ namespace Acme.ProductService.Api.Controllers
 
             _logger.LogInformation("Published ProductCreated event for ProductId: {ProductId}", product.Id);
 
-            return CreatedAtAction(nameof(Get), new { id }, null);
+            return StatusCode(StatusCodes.Status201Created);
         }
     }
 }
