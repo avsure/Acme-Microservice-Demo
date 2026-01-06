@@ -1,18 +1,34 @@
 ﻿using Acme.Contracts;
 using MassTransit;
+using Serilog.Context;
+using Microsoft.Extensions.Logging;
 
 namespace Acme.RecommendationService.Api.Consumer
 {
     public class ProductCreatedConsumer : IConsumer<IProductCreated>
     {
+        private readonly ILogger<ProductCreatedConsumer> _logger;
+
+        public ProductCreatedConsumer(ILogger<ProductCreatedConsumer> logger)
+        {
+            _logger = logger;
+        }
+
         // inject services (db, recommendation engine) via ctor
         public async Task Consume(ConsumeContext<IProductCreated> context)
         {
+            var correlationId = context.Headers.Get<string>("X-Correlation-ID")
+                                ?? Guid.NewGuid().ToString();
+
+            using (Serilog.Context.LogContext.PushProperty("CorrelationId", correlationId))
+            {
+                _logger.LogInformation("Consumed ProductCreated event");
+            }
+
             var msg = context.Message;
-            // store product info, update recommendation indexes, etc.
             Console.WriteLine($"Received ProductCreated: {msg.ProductId} - {msg.Name}");
+
             await Task.CompletedTask;
         }
     }
-
 }

@@ -3,7 +3,6 @@ using Acme.UserProfileService.Api.DTOs;
 using Acme.UserProfileService.Application.DTOs;
 using Acme.UserProfileService.Application.Interfaces;
 using MassTransit;
-using MassTransit.Transports;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Acme.UserProfileService.Api.Controllers
@@ -15,11 +14,15 @@ namespace Acme.UserProfileService.Api.Controllers
     {
         private readonly IUserProfileService _service;
         private readonly IPublishEndpoint _publishEndpoint;
+        private readonly ILogger<UserProfilesController> _logger;
 
-        public UserProfilesController(IUserProfileService service, IPublishEndpoint publishEndpoint)
+        public UserProfilesController(IUserProfileService service,
+                               IPublishEndpoint publishEndpoint,
+                              ILogger<UserProfilesController> logger)
         {
             _service = service;
             _publishEndpoint = publishEndpoint;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -43,6 +46,8 @@ namespace Acme.UserProfileService.Api.Controllers
                 CreatedAt = DateTime.UtcNow
             });
 
+            _logger.LogInformation("Created user profile {UserId} with email {Email}", userprofile.Id, userprofile.Email);
+
             return CreatedAtAction(nameof(GetById), new { id = userprofile.Id }, null);
         }
 
@@ -50,6 +55,12 @@ namespace Acme.UserProfileService.Api.Controllers
         public async Task<IActionResult> GetById(Guid id)
         {
             var user = await _service.GetByIdAsync(id);
+
+            _logger.LogInformation(user is null
+                ? "User profile with ID {UserId} not found"
+                : "Retrieved user profile {UserId} with email {Email}",
+                id, user?.Email);
+
             return user is null ? NotFound() : Ok(user);
         }
 
@@ -57,6 +68,9 @@ namespace Acme.UserProfileService.Api.Controllers
         public async Task<IActionResult> GetAll()
         {
             var users = await _service.GetAllAsync();
+
+            _logger.LogInformation("Retrieved {Count} user profiles", users.Count());   
+
             return Ok(users);
         }
     }

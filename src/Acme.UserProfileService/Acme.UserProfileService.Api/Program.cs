@@ -1,5 +1,8 @@
-﻿using Acme.UserProfileService.Infrastructure;
+﻿using Acme.UserProfileService.Api.Middleware;
+using Acme.UserProfileService.Infrastructure;
 using MassTransit;
+using Microsoft.ApplicationInsights.Extensibility;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,8 +52,6 @@ else
     builder.Services.AddMassTransitTestHarness();
 }
 
-    
-
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -59,7 +60,33 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddInfrastructure();
 
+// Application Insights
+builder.Services.AddApplicationInsightsTelemetry();
+
+// Serilog & CorrelationId
+builder.Host.UseSerilog((context, services, loggerConfiguration) =>
+{
+    loggerConfiguration
+        .Enrich.FromLogContext()
+        .Enrich.WithProperty("Acme.ProductService", "ProductService") // change per service
+        .WriteTo.Console()
+        .WriteTo.ApplicationInsights(
+            services.GetRequiredService<TelemetryConfiguration>(),
+            TelemetryConverter.Traces);
+});
+
+builder.Host.UseSerilog();
+
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddTransient<CorrelationIdHandler>();
+
+builder.Services.AddHttpClient("Default")
+           .AddHttpMessageHandler<CorrelationIdHandler>();
+
 var app = builder.Build();
+
+app.UseMiddleware<CorrelationIdMiddleware>();
 
 app.UseCors("AllowAngular");
 
