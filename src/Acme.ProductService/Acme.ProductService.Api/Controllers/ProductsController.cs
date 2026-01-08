@@ -144,6 +144,5 @@ namespace Acme.ProductService.Api.Controllers
 
             return StatusCode(StatusCodes.Status201Created);
         }
-
     }
 }

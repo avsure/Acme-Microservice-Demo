@@ -75,6 +75,8 @@ public partial class Program
         // Application Insights
         builder.Services.AddApplicationInsightsTelemetry();
 
+        builder.Logging.ClearProviders();
+
         // Serilog & CorrelationId
         builder.Host.UseSerilog((context, services, loggerConfiguration) =>
         {
@@ -86,6 +88,8 @@ public partial class Program
                     services.GetRequiredService<TelemetryConfiguration>(),
                     TelemetryConverter.Traces);
         });
+
+        builder.Logging.AddSerilog();
 
         builder.Host.UseSerilog();
 

@@ -72,6 +72,8 @@ internal class Program
         // Application Insights
         builder.Services.AddApplicationInsightsTelemetry();
 
+        builder.Logging.ClearProviders();
+
         // Serilog & CorrelationId
         builder.Host.UseSerilog((context, services, loggerConfiguration) =>
         {
@@ -83,6 +85,7 @@ internal class Program
                     services.GetRequiredService<TelemetryConfiguration>(),
                     TelemetryConverter.Traces);
         });
+        builder.Logging.AddSerilog();
 
         builder.Host.UseSerilog();
 
