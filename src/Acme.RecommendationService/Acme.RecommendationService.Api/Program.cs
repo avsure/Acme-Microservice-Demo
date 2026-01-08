@@ -87,15 +87,27 @@ internal class Program
         builder.Logging.ClearProviders();
 
         // Serilog & CorrelationId
-        builder.Host.UseSerilog((context, services, loggerConfiguration) =>
+        //builder.Host.UseSerilog((context, services, loggerConfiguration) =>
+        //{
+        //    loggerConfiguration
+        //        .Enrich.FromLogContext()
+        //        .Enrich.WithProperty("Acme.ProductService", "ProductService") // change per service
+        //        .WriteTo.Console()
+        //        .WriteTo.ApplicationInsights(
+        //            services.GetRequiredService<TelemetryConfiguration>(),
+        //            TelemetryConverter.Traces);
+        //});
+
+        builder.Host.UseSerilog((context, services, config) =>
         {
-            loggerConfiguration
+            var aiConnectionString = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+
+            config
+                .MinimumLevel.Information()
                 .Enrich.FromLogContext()
-                .Enrich.WithProperty("Acme.ProductService", "ProductService") // change per service
+                .Enrich.WithProperty("Service", "RecommendationService")
                 .WriteTo.Console()
-                .WriteTo.ApplicationInsights(
-                    services.GetRequiredService<TelemetryConfiguration>(),
-                    TelemetryConverter.Traces);
+                .WriteTo.ApplicationInsights(aiConnectionString, TelemetryConverter.Traces);
         });
 
         builder.Logging.AddSerilog();
