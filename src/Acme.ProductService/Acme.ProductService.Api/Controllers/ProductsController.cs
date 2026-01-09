@@ -31,6 +31,8 @@ namespace Acme.ProductService.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
+            Console.WriteLine("CONSOLE TEST LOG");
+
             _logger.LogInformation("Product: GetAll test log");
 
             Serilog.Log.Information("Serilog static test log");

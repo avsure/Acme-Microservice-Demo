@@ -12,6 +12,9 @@ public partial class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        Console.WriteLine("APPLICATION STARTED");
+        builder.Logging.AddConsole();
+
         //CORS
         builder.Services.AddCors(options =>
         {
