@@ -14,15 +14,6 @@ public partial class Program
 
         builder.Logging.ClearProviders();
 
-        builder.Host.UseSerilog((context, services, config) =>
-        {
-            config
-                .MinimumLevel.Information()
-                .Enrich.FromLogContext()
-                .Enrich.WithProperty("Service", "ProductService")
-                .WriteTo.Console();
-        });
-
         //CORS
         builder.Services.AddCors(options =>
         {
@@ -110,6 +101,15 @@ public partial class Program
         //        .WriteTo.Console()
         //        .WriteTo.ApplicationInsights(aiConnectionString, TelemetryConverter.Traces);
         //});
+
+        builder.Host.UseSerilog((context, services, config) =>
+        {
+            config
+                .MinimumLevel.Information()
+                .Enrich.FromLogContext()
+                .Enrich.WithProperty("Service", "ProductService")
+                .WriteTo.Console();
+        });
 
         builder.Services.AddHttpContextAccessor();
 
