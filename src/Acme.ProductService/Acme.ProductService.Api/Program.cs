@@ -13,8 +13,15 @@ public partial class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Logging.ClearProviders();
-        builder.Logging.AddConsole();
-        Console.WriteLine("APPLICATION STARTED");
+
+        builder.Host.UseSerilog((context, services, config) =>
+        {
+            config
+                .MinimumLevel.Information()
+                .Enrich.FromLogContext()
+                .Enrich.WithProperty("Service", "ProductService")
+                .WriteTo.Console();
+        });
 
         //CORS
         builder.Services.AddCors(options =>
@@ -80,7 +87,6 @@ public partial class Program
         builder.Services.AddApplicationInsightsTelemetry();
 
 
-
         // Serilog & CorrelationId
         //builder.Host.UseSerilog((context, services, loggerConfiguration) =>
         //{
@@ -104,18 +110,6 @@ public partial class Program
         //        .WriteTo.Console()
         //        .WriteTo.ApplicationInsights(aiConnectionString, TelemetryConverter.Traces);
         //});
-
-        builder.Host.UseSerilog((context, services, config) =>
-        {
-            config
-                .MinimumLevel.Information()
-                .Enrich.FromLogContext()
-                .WriteTo.Console();
-        });
-
-        builder.Logging.AddSerilog();
-
-        builder.Host.UseSerilog();
 
         builder.Services.AddHttpContextAccessor();
 
