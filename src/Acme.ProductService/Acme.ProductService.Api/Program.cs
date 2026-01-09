@@ -12,8 +12,9 @@ public partial class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        Console.WriteLine("APPLICATION STARTED");
+        builder.Logging.ClearProviders();
         builder.Logging.AddConsole();
+        Console.WriteLine("APPLICATION STARTED");
 
         //CORS
         builder.Services.AddCors(options =>
@@ -78,7 +79,7 @@ public partial class Program
         // Application Insights
         builder.Services.AddApplicationInsightsTelemetry();
 
-        builder.Logging.ClearProviders();
+
 
         // Serilog & CorrelationId
         //builder.Host.UseSerilog((context, services, loggerConfiguration) =>
@@ -92,16 +93,24 @@ public partial class Program
         //            TelemetryConverter.Traces);
         //});
 
+        //builder.Host.UseSerilog((context, services, config) =>
+        //{
+        //    var aiConnectionString = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+
+        //    config
+        //        .MinimumLevel.Information()
+        //        .Enrich.FromLogContext()
+        //        .Enrich.WithProperty("Service", "ProductService")
+        //        .WriteTo.Console()
+        //        .WriteTo.ApplicationInsights(aiConnectionString, TelemetryConverter.Traces);
+        //});
+
         builder.Host.UseSerilog((context, services, config) =>
         {
-            var aiConnectionString = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
-
             config
                 .MinimumLevel.Information()
                 .Enrich.FromLogContext()
-                .Enrich.WithProperty("Service", "ProductService")
-                .WriteTo.Console()
-                .WriteTo.ApplicationInsights(aiConnectionString, TelemetryConverter.Traces);
+                .WriteTo.Console();
         });
 
         builder.Logging.AddSerilog();
