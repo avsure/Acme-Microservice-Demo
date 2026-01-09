@@ -19,6 +19,10 @@ namespace Acme.RecommendationService.Api.Controllers
         [HttpGet("{productId}")]
         public async Task<IActionResult> GetForProduct(Guid productId)
         {
+            _logger.LogInformation("Recommendation: Get Product By Id test log");
+
+            Serilog.Log.Information("Serilog static test log");
+
             var result = await _service.GetForProductAsync(productId);
 
             _logger.LogInformation("Retrieved {Count} recommendations for product {ProductId}", result.Count(), productId);

@@ -31,6 +31,10 @@ namespace Acme.ProductService.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
+            _logger.LogInformation("Product: GetAll test log");
+
+            Serilog.Log.Information("Serilog static test log");
+
             _logger.LogInformation("Getting all the Products");
             var product = await _productService.GetAllProductsAsync();
             if (product == null) return NotFound();

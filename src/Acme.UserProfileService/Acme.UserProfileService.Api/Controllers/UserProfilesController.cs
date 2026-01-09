@@ -67,6 +67,10 @@ namespace Acme.UserProfileService.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
+            _logger.LogInformation("User: GetAll test log");
+
+            Serilog.Log.Information("Serilog static test log");
+
             var users = await _service.GetAllAsync();
 
             _logger.LogInformation("Retrieved {Count} user profiles", users.Count());   
