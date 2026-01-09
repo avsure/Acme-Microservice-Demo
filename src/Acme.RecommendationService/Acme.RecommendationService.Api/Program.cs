@@ -11,6 +11,8 @@ internal class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        builder.Logging.ClearProviders();
+
         //CORS
         builder.Services.AddCors(options =>
         {
@@ -29,18 +31,57 @@ internal class Program
         // Detect environment
         var env = builder.Environment.EnvironmentName;
 
-        if (!env.Equals("Test", StringComparison.OrdinalIgnoreCase))
-        {
-            var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
-            var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
-            var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
+        // --- RabbitMQ / MassTransit --- keep this for local work on case
+        //if (!env.Equals("Test", StringComparison.OrdinalIgnoreCase))
+        //{
+        //    var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
+        //    var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
+        //    var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
 
+
+        //    builder.Services.AddMassTransit(x =>
+        //    {
+        //        x.AddConsumer<ProductCreatedConsumer>();
+        //        x.AddConsumer<UserCreatedConsumer>();
+
+        //        x.UsingRabbitMq((context, cfg) =>
+        //        {
+        //            cfg.Host(rabbitHost, "/", h =>
+        //            {
+        //                h.Username(rabbitUser);
+        //                h.Password(rabbitPass);
+        //            });
+
+        //            cfg.ReceiveEndpoint("recommendation-product-created", e =>
+        //            {
+        //                e.ConfigureConsumer<ProductCreatedConsumer>(context);
+        //            });
+
+        //            cfg.ReceiveEndpoint("recommendation-user-created", e =>
+        //            {
+        //                e.ConfigureConsumer<UserCreatedConsumer>(context);
+        //            });
+
+        //            // optional: cfg.ConfigureEndpoints(context);
+        //        });
+        //    });
+        //}
+        //else
+        //{
+        //    // Test environment → skip real RabbitMQ, optional in-memory harness
+        //    builder.Services.AddMassTransitTestHarness();
+        //}
+
+        // --- RabbitMQ / MassTransit ---
+        var rabbitHost = builder.Configuration["RabbitMq:Host"];
+
+        if (!string.IsNullOrWhiteSpace(rabbitHost))
+        {
+            var rabbitUser = builder.Configuration["RabbitMq:User"] ?? "guest";
+            var rabbitPass = builder.Configuration["RabbitMq:Pass"] ?? "guest";
 
             builder.Services.AddMassTransit(x =>
             {
-                x.AddConsumer<ProductCreatedConsumer>();
-                x.AddConsumer<UserCreatedConsumer>();
-
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.Host(rabbitHost, "/", h =>
@@ -49,28 +90,16 @@ internal class Program
                         h.Password(rabbitPass);
                     });
 
-                    cfg.ReceiveEndpoint("recommendation-product-created", e =>
-                    {
-                        e.ConfigureConsumer<ProductCreatedConsumer>(context);
-                    });
-
-                    cfg.ReceiveEndpoint("recommendation-user-created", e =>
-                    {
-                        e.ConfigureConsumer<UserCreatedConsumer>(context);
-                    });
-
-                    // optional: cfg.ConfigureEndpoints(context);
+                    cfg.ConfigureEndpoints(context);
                 });
             });
         }
         else
         {
-            // Test environment → skip real RabbitMQ, optional in-memory harness
             builder.Services.AddMassTransitTestHarness();
         }
 
         // Add services to the container.
-
         builder.Services.AddControllers();
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
@@ -110,12 +139,9 @@ internal class Program
                 .WriteTo.ApplicationInsights(aiConnectionString, TelemetryConverter.Traces);
         });
 
-        builder.Logging.AddSerilog();
+        //builder.Logging.AddSerilog();
 
-        var ai = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
-        Console.WriteLine($"AI: {ai}");
-
-        builder.Host.UseSerilog();
+        //builder.Host.UseSerilog();
 
         builder.Services.AddTransient<CorrelationIdHandler>();
 

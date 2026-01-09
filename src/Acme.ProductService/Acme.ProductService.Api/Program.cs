@@ -26,15 +26,48 @@ public partial class Program
                 });
         });
 
+        //application Insights
+        builder.Services.AddApplicationInsightsTelemetry();
+
         // Detect environment
         var env = builder.Environment.EnvironmentName;
 
+        // --- RabbitMQ / MassTransit --- keep this for local work on case
+        //if (!env.Equals("Test", StringComparison.OrdinalIgnoreCase))
+        //{
+        //    var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
+        //    var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
+        //    var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
+
+        //    builder.Services.AddMassTransit(x =>
+        //    {
+        //        x.UsingRabbitMq((context, cfg) =>
+        //        {
+        //            cfg.Host(rabbitHost, "/", h =>
+        //            {
+        //                h.Username(rabbitUser);
+        //                h.Password(rabbitPass);
+        //            });
+
+        //            // Optional: endpoint name formatter
+        //            cfg.ConfigureEndpoints(context);
+        //        });
+        //    });
+
+        //}
+        //else
+        //{
+        //    // Test environment → skip real RabbitMQ, optional in-memory harness
+        //    builder.Services.AddMassTransitTestHarness();
+        //}
+
         // --- RabbitMQ / MassTransit ---
-        if (!env.Equals("Test", StringComparison.OrdinalIgnoreCase))
+        var rabbitHost = builder.Configuration["RabbitMq:Host"];
+
+        if (!string.IsNullOrWhiteSpace(rabbitHost))
         {
-            var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
-            var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
-            var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
+            var rabbitUser = builder.Configuration["RabbitMq:User"] ?? "guest";
+            var rabbitPass = builder.Configuration["RabbitMq:Pass"] ?? "guest";
 
             builder.Services.AddMassTransit(x =>
             {
@@ -46,15 +79,12 @@ public partial class Program
                         h.Password(rabbitPass);
                     });
 
-                    // Optional: endpoint name formatter
                     cfg.ConfigureEndpoints(context);
                 });
             });
-
         }
         else
         {
-            // Test environment → skip real RabbitMQ, optional in-memory harness
             builder.Services.AddMassTransitTestHarness();
         }
 
@@ -90,26 +120,26 @@ public partial class Program
         //            TelemetryConverter.Traces);
         //});
 
-        //builder.Host.UseSerilog((context, services, config) =>
-        //{
-        //    var aiConnectionString = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
-
-        //    config
-        //        .MinimumLevel.Information()
-        //        .Enrich.FromLogContext()
-        //        .Enrich.WithProperty("Service", "ProductService")
-        //        .WriteTo.Console()
-        //        .WriteTo.ApplicationInsights(aiConnectionString, TelemetryConverter.Traces);
-        //});
-
         builder.Host.UseSerilog((context, services, config) =>
         {
+            var aiConnectionString = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+
             config
                 .MinimumLevel.Information()
                 .Enrich.FromLogContext()
                 .Enrich.WithProperty("Service", "ProductService")
-                .WriteTo.Console();
+                .WriteTo.Console()
+                .WriteTo.ApplicationInsights(aiConnectionString, TelemetryConverter.Traces);
         });
+
+        //builder.Host.UseSerilog((context, services, config) =>
+        //{
+        //    config
+        //        .MinimumLevel.Information()
+        //        .Enrich.FromLogContext()
+        //        .Enrich.WithProperty("Service", "ProductService")
+        //        .WriteTo.Console();
+        //});
 
         builder.Services.AddHttpContextAccessor();
 

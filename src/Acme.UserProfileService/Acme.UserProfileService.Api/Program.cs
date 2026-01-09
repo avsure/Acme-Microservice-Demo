@@ -10,6 +10,8 @@ internal class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        builder.Logging.ClearProviders();
+
         //CORS
         builder.Services.AddCors(options =>
         {
@@ -28,15 +30,45 @@ internal class Program
         // Detect environment
         var env = builder.Environment.EnvironmentName;
 
-        if (!env.Equals("Test", StringComparison.OrdinalIgnoreCase))
+        //keep this for local work on case
+        //if (!env.Equals("Test", StringComparison.OrdinalIgnoreCase))
+        //{
+        //    var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
+        //    var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
+        //    var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
+
+        //    builder.Services.AddMassTransit(x =>
+        //    {
+        //        // No consumers here, only configure RabbitMQ so we can publish.
+        //        x.UsingRabbitMq((context, cfg) =>
+        //        {
+        //            cfg.Host(rabbitHost, "/", h =>
+        //            {
+        //                h.Username(rabbitUser);
+        //                h.Password(rabbitPass);
+        //            });
+
+        //            // optional: endpoint name formatter
+        //            cfg.ConfigureEndpoints(context);
+        //        });
+        //    });
+        //}
+        //else
+        //{
+        //    // Test environment → skip real RabbitMQ, optional in-memory harness
+        //    builder.Services.AddMassTransitTestHarness();
+        //}
+
+        // --- RabbitMQ / MassTransit ---
+        var rabbitHost = builder.Configuration["RabbitMq:Host"];
+
+        if (!string.IsNullOrWhiteSpace(rabbitHost))
         {
-            var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
-            var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
-            var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
+            var rabbitUser = builder.Configuration["RabbitMq:User"] ?? "guest";
+            var rabbitPass = builder.Configuration["RabbitMq:Pass"] ?? "guest";
 
             builder.Services.AddMassTransit(x =>
             {
-                // No consumers here, only configure RabbitMQ so we can publish.
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.Host(rabbitHost, "/", h =>
@@ -45,14 +77,12 @@ internal class Program
                         h.Password(rabbitPass);
                     });
 
-                    // optional: endpoint name formatter
                     cfg.ConfigureEndpoints(context);
                 });
             });
         }
         else
         {
-            // Test environment → skip real RabbitMQ, optional in-memory harness
             builder.Services.AddMassTransitTestHarness();
         }
 
@@ -99,9 +129,9 @@ internal class Program
         });
 
 
-        builder.Logging.AddSerilog();
+        //builder.Logging.AddSerilog();
 
-        builder.Host.UseSerilog();
+        //builder.Host.UseSerilog();
 
         builder.Services.AddTransient<CorrelationIdHandler>();
 
