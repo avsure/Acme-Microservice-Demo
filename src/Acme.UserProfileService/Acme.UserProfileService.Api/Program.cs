@@ -83,7 +83,7 @@ internal class Program
         }
         else
         {
-            builder.Services.AddMassTransitTestHarness();
+            //builder.Services.AddMassTransitTestHarness();
         }
 
         // Add services to the container.

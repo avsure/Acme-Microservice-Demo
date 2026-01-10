@@ -85,7 +85,7 @@ public partial class Program
         }
         else
         {
-            builder.Services.AddMassTransitTestHarness();
+            //builder.Services.AddMassTransitTestHarness();
         }
 
         //Controllers
