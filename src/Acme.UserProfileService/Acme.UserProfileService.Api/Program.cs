@@ -25,7 +25,7 @@ internal class Program
         });
 
         //application Insights
-        builder.Services.AddApplicationInsightsTelemetry();
+        //builder.Services.AddApplicationInsightsTelemetry();
 
         // Detect environment
         var env = builder.Environment.EnvironmentName;
