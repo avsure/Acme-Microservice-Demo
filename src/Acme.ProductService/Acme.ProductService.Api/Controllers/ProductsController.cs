@@ -28,15 +28,6 @@ namespace Acme.ProductService.Api.Controllers
             _httpContextAccessor = httpContextAccessor;
         }
 
-        [HttpGet]
-        public IActionResult Test()
-        {
-            _logger.LogInformation("ILogger test log");
-            Serilog.Log.Information("Serilog static test log");
-            Console.WriteLine("Console test log");
-
-            return Ok();
-        }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
