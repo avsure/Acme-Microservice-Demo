@@ -79,6 +79,8 @@ namespace Acme.ProductService.Api.Controllers
                 .Items["X-Correlation-ID"]?
                 .ToString();
 
+            _logger.LogInformation("X-Correlation-ID : "+ correlationId);
+
             var id = await _productService.CreateProductAsync(
                 new ProductCreateModel(request.Name, request.Price, string.Empty, string.Empty)
             );
