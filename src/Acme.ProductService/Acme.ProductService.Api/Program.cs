@@ -30,6 +30,7 @@ public partial class Program
         var env = builder.Environment.EnvironmentName;
 
         #region RabbitMQ / MassTransit
+
         // --- RabbitMQ / MassTransit --- keep this for local work on case
         var messagingProvider = builder.Configuration["Messaging:Provider"];
         Log.Information("Inside Product Service: Messaging Provider: {Provider}", messagingProvider);
@@ -71,6 +72,23 @@ public partial class Program
 
         #endregion
 
+        #region Serilog & CorrelationId
+
+        builder.Host.UseSerilog((context, services, config) =>
+        {
+            var aiConnectionString = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+
+            config
+                .MinimumLevel.Information()
+                .Enrich.FromLogContext()
+                .Enrich.WithProperty("Service", "ProductService")
+                .WriteTo.Console()
+                .WriteTo.ApplicationInsights(aiConnectionString, TelemetryConverter.Traces)
+                .WriteTo.File("/home/LogFiles/log-.txt", rollingInterval: RollingInterval.Day);
+        });
+
+        #endregion
+
         //Controllers
         builder.Services.AddControllers();
 
@@ -88,31 +106,6 @@ public partial class Program
         // Application Insights
         builder.Services.AddApplicationInsightsTelemetry();
 
-
-        // Serilog & CorrelationId
-        //builder.Host.UseSerilog((context, services, loggerConfiguration) =>
-        //{
-        //    loggerConfiguration
-        //        .Enrich.FromLogContext()
-        //        .Enrich.WithProperty("Acme.ProductService", "ProductService") // change per service
-        //        .WriteTo.Console()
-        //        .WriteTo.ApplicationInsights(
-        //            services.GetRequiredService<TelemetryConfiguration>(),
-        //            TelemetryConverter.Traces);
-        //});
-
-        builder.Host.UseSerilog((context, services, config) =>
-        {
-            var aiConnectionString = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
-
-            config
-                .MinimumLevel.Information()
-                .Enrich.FromLogContext()
-                .Enrich.WithProperty("Service", "ProductService")
-                .WriteTo.Console()
-                .WriteTo.ApplicationInsights(aiConnectionString, TelemetryConverter.Traces);
-        });
-
         builder.Services.AddHttpContextAccessor();
 
         builder.Services.AddTransient<CorrelationIdHandler>();
@@ -121,6 +114,8 @@ public partial class Program
             .AddHttpMessageHandler<CorrelationIdHandler>();
 
         var app = builder.Build();
+
+        Log.Information("ProductService API started successfully");
 
         app.UseMiddleware<CorrelationIdMiddleware>();
 

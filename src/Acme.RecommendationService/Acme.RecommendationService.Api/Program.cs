@@ -83,6 +83,23 @@ internal class Program
 
         #endregion
 
+        #region Serilog & CorrelationId
+
+        builder.Host.UseSerilog((context, services, config) =>
+        {
+            var aiConnectionString = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+
+            config
+                .MinimumLevel.Information()
+                .Enrich.FromLogContext()
+                .Enrich.WithProperty("Service", "RecommendationService")
+                .WriteTo.Console()
+                .WriteTo.ApplicationInsights(aiConnectionString, TelemetryConverter.Traces)
+                .WriteTo.File("/home/LogFiles/log-.txt", rollingInterval: RollingInterval.Day);
+        });
+
+        #endregion
+
         // Add services to the container.
         builder.Services.AddControllers();
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -99,34 +116,6 @@ internal class Program
 
         builder.Logging.ClearProviders();
 
-        // Serilog & CorrelationId
-        //builder.Host.UseSerilog((context, services, loggerConfiguration) =>
-        //{
-        //    loggerConfiguration
-        //        .Enrich.FromLogContext()
-        //        .Enrich.WithProperty("Acme.ProductService", "ProductService") // change per service
-        //        .WriteTo.Console()
-        //        .WriteTo.ApplicationInsights(
-        //            services.GetRequiredService<TelemetryConfiguration>(),
-        //            TelemetryConverter.Traces);
-        //});
-
-        builder.Host.UseSerilog((context, services, config) =>
-        {
-            var aiConnectionString = context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
-
-            config
-                .MinimumLevel.Information()
-                .Enrich.FromLogContext()
-                .Enrich.WithProperty("Service", "RecommendationService")
-                .WriteTo.Console()
-                .WriteTo.ApplicationInsights(aiConnectionString, TelemetryConverter.Traces);
-        });
-
-        //builder.Logging.AddSerilog();
-
-        //builder.Host.UseSerilog();
-
         builder.Services.AddTransient<CorrelationIdHandler>();
 
         builder.Services.AddHttpClient("Default")
@@ -135,6 +124,8 @@ internal class Program
         builder.Services.AddHttpContextAccessor();
 
         var app = builder.Build();
+
+        Log.Information("Recommendation Service API started successfully");
 
         app.UseMiddleware<CorrelationIdMiddleware>();
 
