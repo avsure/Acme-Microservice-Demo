@@ -64,10 +64,13 @@ public partial class Program
                 builder.Services.AddMassTransitTestHarness();
             }
         }
-
-        if (messagingProvider != "RabbitMQ")
+        else
         {
-            builder.Services.AddSingleton<IPublishEndpoint>(_ => null);
+            // ✅ Safe no-broker mode
+            builder.Services.AddMassTransit(x =>
+            {
+                x.UsingInMemory((context, cfg) => { });
+            });
         }
 
         #endregion
