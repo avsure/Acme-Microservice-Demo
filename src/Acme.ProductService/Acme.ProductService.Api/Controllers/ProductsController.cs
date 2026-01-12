@@ -41,20 +41,17 @@ namespace Acme.ProductService.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            Console.WriteLine("CONSOLE TEST LOG");
+            Console.WriteLine("*********CONSOLE TEST LOG*********");
+            Serilog.Log.Information("*********Serilog static test log*********");
+            _logger.LogInformation("*********Getting all the Products*********");
 
-            _logger.LogInformation("Product: GetAll test log");
-
-            Serilog.Log.Information("Serilog static test log");
-
-            _logger.LogInformation("Getting all the Products");
             var product = await _productService.GetAllProductsAsync();
             if (product == null) return NotFound();
 
             List<Product_Dto> prodList = new List<Product_Dto>();
             foreach (ProductDto item in product)
             {
-               Product_Dto product_Dto = new Product_Dto(item.Id, item.Name, item.Price);
+                Product_Dto product_Dto = new Product_Dto(item.Id, item.Name, item.Price);
                 prodList.Add(product_Dto);
             }
             _logger.LogInformation(_logger.IsEnabled(LogLevel.Information)
@@ -76,49 +73,6 @@ namespace Acme.ProductService.Api.Controllers
             return Ok(new Product_Dto(product.Id, product.Name, product.Price));
         }
 
-        //[HttpPost]
-        //[Consumes("application/json")]
-        //public async Task<IActionResult> Create([FromBody] CreateProductRequest request)
-        //{
-        //    _logger.LogInformation("POST /api/products reached");
-
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
-
-        //    var id = await _productService.CreateProductAsync(
-        //            new ProductCreateModel(request.Name, request.Price,string.Empty,string.Empty)
-        //         );
-
-        //    var correlationId = _httpContextAccessor.HttpContext?
-        //                .Items["X-Correlation-ID"]?
-        //                .ToString();
-
-        //    // get domain/model data directly
-        //    var product = await _productService.GetProductByIdAsync(id);
-
-        //    await _publishEndpoint.Publish<IProductCreated>(new
-        //    {
-        //        ProductId = product.Id,
-        //        Name = product.Name,
-        //        Price = product.Price,
-        //        CreatedAt = DateTime.UtcNow
-        //    },
-        //    context =>
-        //    {
-        //        if (!string.IsNullOrEmpty(correlationId))
-        //        {
-        //            context.Headers.Set("X-Correlation-ID", correlationId);
-        //        }
-        //    }) ;
-
-        //    _logger.LogInformation("Published ProductCreated event for ProductId: {ProductId}", product.Id);
-
-        //    return StatusCode(StatusCodes.Status201Created);
-        //}
-
-
         [HttpPost]
         [Consumes("application/json")]
         public async Task<IActionResult> Create([FromBody] CreateProductRequest request)
@@ -138,21 +92,24 @@ namespace Acme.ProductService.Api.Controllers
                 new ProductCreateModel(request.Name, request.Price, string.Empty, string.Empty)
             );
 
-            // 🔥 Fire-and-forget publish (DO NOT BLOCK HTTP RESPONSE)
-            _ = _publishEndpoint.Publish<IProductCreated>(new
+            if (_publishEndpoint != null)
             {
-                ProductId = id,
-                Name = request.Name,
-                Price = request.Price,
-                CreatedAt = DateTime.UtcNow
-            },
-            context =>
-            {
-                if (!string.IsNullOrEmpty(correlationId))
+                // 🔥 Fire-and-forget publish (DO NOT BLOCK HTTP RESPONSE)
+                _ = _publishEndpoint.Publish<IProductCreated>(new
                 {
+                    ProductId = id,
+                    Name = request.Name,
+                    Price = request.Price,
+                    CreatedAt = DateTime.UtcNow
+                },
+                context =>
+                {
+                    if (!string.IsNullOrEmpty(correlationId))
+                    {
                     context.Headers.Set("X-Correlation-ID", correlationId);
-                }
-            });
+                    }
+                });
+            }
 
             _logger.LogInformation(
                 "Product created. ProductId: {ProductId}, CorrelationId: {CorrelationId}",

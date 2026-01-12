@@ -37,15 +37,18 @@ namespace Acme.UserProfileService.Api.Controllers
             });
 
             var userprofile = await _service.GetByIdAsync(id);
-          
-            await _publishEndpoint.Publish<IUserCreated>(new
-            {
-                UserId = userprofile.Id,
-                Email = userprofile.Email,
-                DisplayName = userprofile.Name,
-                CreatedAt = DateTime.UtcNow
-            });
 
+            if (_publishEndpoint != null)
+            {
+                await _publishEndpoint.Publish<IUserCreated>(new
+                {
+                    UserId = userprofile.Id,
+                    Email = userprofile.Email,
+                    DisplayName = userprofile.Name,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+                
             _logger.LogInformation("Created user profile {UserId} with email {Email}", userprofile.Id, userprofile.Email);
 
             return CreatedAtAction(nameof(GetById), new { id = userprofile.Id }, null);

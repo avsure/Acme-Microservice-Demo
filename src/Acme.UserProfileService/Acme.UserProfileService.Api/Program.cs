@@ -1,7 +1,6 @@
 ﻿using Acme.UserProfileService.Api.Middleware;
 using Acme.UserProfileService.Infrastructure;
 using MassTransit;
-using Microsoft.ApplicationInsights.Extensibility;
 using Serilog;
 
 internal class Program
@@ -24,70 +23,55 @@ internal class Program
                 });
         });
 
-        //application Insights
-        //builder.Services.AddApplicationInsightsTelemetry();
-
         // Detect environment
         var env = builder.Environment.EnvironmentName;
 
-        //keep this for local work on case
-        //if (!env.Equals("Test", StringComparison.OrdinalIgnoreCase))
-        //{
-        //    var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
-        //    var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
-        //    var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
+        #region RabbitMQ / MassTransit
 
-        //    builder.Services.AddMassTransit(x =>
-        //    {
-        //        // No consumers here, only configure RabbitMQ so we can publish.
-        //        x.UsingRabbitMq((context, cfg) =>
-        //        {
-        //            cfg.Host(rabbitHost, "/", h =>
-        //            {
-        //                h.Username(rabbitUser);
-        //                h.Password(rabbitPass);
-        //            });
+        // --- RabbitMQ / MassTransit --- keep this for local work on case
+        var messagingProvider = builder.Configuration["Messaging:Provider"];
 
-        //            // optional: endpoint name formatter
-        //            cfg.ConfigureEndpoints(context);
-        //        });
-        //    });
-        //}
-        //else
-        //{
-        //    // Test environment → skip real RabbitMQ, optional in-memory harness
-        //    builder.Services.AddMassTransitTestHarness();
-        //}
+        Log.Information("Inside Userprofile: Messaging Provider: {Provider}", messagingProvider);
 
-        // --- RabbitMQ / MassTransit ---
-        var rabbitHost = builder.Configuration["RabbitMq:Host"];
-
-        if (!string.IsNullOrWhiteSpace(rabbitHost))
+        if (messagingProvider == "RabbitMQ")
         {
-            var rabbitUser = builder.Configuration["RabbitMq:User"] ?? "guest";
-            var rabbitPass = builder.Configuration["RabbitMq:Pass"] ?? "guest";
-
-            builder.Services.AddMassTransit(x =>
+            if (!env.Equals("Test", StringComparison.OrdinalIgnoreCase))
             {
-                x.UsingRabbitMq((context, cfg) =>
-                {
-                    cfg.Host(rabbitHost, "/", h =>
-                    {
-                        h.Username(rabbitUser);
-                        h.Password(rabbitPass);
-                    });
+                var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
+                var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
+                var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
 
-                    cfg.ConfigureEndpoints(context);
+                builder.Services.AddMassTransit(x =>
+                {
+                    // No consumers here, only configure RabbitMQ so we can publish.
+                    x.UsingRabbitMq((context, cfg) =>
+                    {
+                        cfg.Host(rabbitHost, "/", h =>
+                        {
+                            h.Username(rabbitUser);
+                            h.Password(rabbitPass);
+                        });
+
+                        // optional: endpoint name formatter
+                        cfg.ConfigureEndpoints(context);
+                    });
                 });
-            });
+            }
+            else
+            {
+                // Test environment → skip real RabbitMQ, optional in-memory harness
+                builder.Services.AddMassTransitTestHarness();
+            }
         }
-        else
+
+        if (messagingProvider != "RabbitMQ")
         {
-            //builder.Services.AddMassTransitTestHarness();
+            builder.Services.AddSingleton<IPublishEndpoint>(_ => null);
         }
+
+        #endregion
 
         // Add services to the container.
-
         builder.Services.AddControllers();
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

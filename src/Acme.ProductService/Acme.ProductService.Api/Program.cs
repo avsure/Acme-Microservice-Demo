@@ -26,67 +26,50 @@ public partial class Program
                 });
         });
 
-        //application Insights
-        //builder.Services.AddApplicationInsightsTelemetry();
-
         // Detect environment
         var env = builder.Environment.EnvironmentName;
 
+        #region RabbitMQ / MassTransit
         // --- RabbitMQ / MassTransit --- keep this for local work on case
-        //if (!env.Equals("Test", StringComparison.OrdinalIgnoreCase))
-        //{
-        //    var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
-        //    var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
-        //    var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
+        var messagingProvider = builder.Configuration["Messaging:Provider"];
+        Log.Information("Inside Product Service: Messaging Provider: {Provider}", messagingProvider);
 
-        //    builder.Services.AddMassTransit(x =>
-        //    {
-        //        x.UsingRabbitMq((context, cfg) =>
-        //        {
-        //            cfg.Host(rabbitHost, "/", h =>
-        //            {
-        //                h.Username(rabbitUser);
-        //                h.Password(rabbitPass);
-        //            });
-
-        //            // Optional: endpoint name formatter
-        //            cfg.ConfigureEndpoints(context);
-        //        });
-        //    });
-
-        //}
-        //else
-        //{
-        //    // Test environment → skip real RabbitMQ, optional in-memory harness
-        //    builder.Services.AddMassTransitTestHarness();
-        //}
-
-        // --- RabbitMQ / MassTransit ---
-        var rabbitHost = builder.Configuration["RabbitMq:Host"];
-
-        if (!string.IsNullOrWhiteSpace(rabbitHost))
+        if (messagingProvider == "RabbitMQ")
         {
-            var rabbitUser = builder.Configuration["RabbitMq:User"] ?? "guest";
-            var rabbitPass = builder.Configuration["RabbitMq:Pass"] ?? "guest";
-
-            builder.Services.AddMassTransit(x =>
+            if (!env.Equals("Test", StringComparison.OrdinalIgnoreCase))
             {
-                x.UsingRabbitMq((context, cfg) =>
-                {
-                    cfg.Host(rabbitHost, "/", h =>
-                    {
-                        h.Username(rabbitUser);
-                        h.Password(rabbitPass);
-                    });
+                var rabbitHost = builder.Configuration.GetValue<string>("RabbitMq:Host") ?? "localhost";
+                var rabbitUser = builder.Configuration.GetValue<string>("RabbitMq:User") ?? "guest";
+                var rabbitPass = builder.Configuration.GetValue<string>("RabbitMq:Pass") ?? "guest";
 
-                    cfg.ConfigureEndpoints(context);
+                builder.Services.AddMassTransit(x =>
+                {
+                    x.UsingRabbitMq((context, cfg) =>
+                    {
+                        cfg.Host(rabbitHost, "/", h =>
+                        {
+                            h.Username(rabbitUser);
+                            h.Password(rabbitPass);
+                        });
+
+                        // Optional: endpoint name formatter
+                        cfg.ConfigureEndpoints(context);
+                    });
                 });
-            });
+            }
+            else
+            {
+                // Test environment → skip real RabbitMQ, optional in-memory harness
+                builder.Services.AddMassTransitTestHarness();
+            }
         }
-        else
+
+        if (messagingProvider != "RabbitMQ")
         {
-            //builder.Services.AddMassTransitTestHarness();
+            builder.Services.AddSingleton<IPublishEndpoint>(_ => null);
         }
+
+        #endregion
 
         //Controllers
         builder.Services.AddControllers();
@@ -97,8 +80,6 @@ public partial class Program
 
         //Dependency Injection
         builder.Services.AddInfrastructure();
-        //builder.Services.AddScoped<IProductRepository, ProductRepository>();
-        //builder.Services.AddScoped<IProductService, ProductsService>();
 
         //Swagger
         builder.Services.AddEndpointsApiExplorer();
@@ -132,15 +113,6 @@ public partial class Program
                 .WriteTo.ApplicationInsights(aiConnectionString, TelemetryConverter.Traces);
         });
 
-        //builder.Host.UseSerilog((context, services, config) =>
-        //{
-        //    config
-        //        .MinimumLevel.Information()
-        //        .Enrich.FromLogContext()
-        //        .Enrich.WithProperty("Service", "ProductService")
-        //        .WriteTo.Console();
-        //});
-
         builder.Services.AddHttpContextAccessor();
 
         builder.Services.AddTransient<CorrelationIdHandler>();
@@ -162,7 +134,8 @@ public partial class Program
 
         app.UseAuthorization();
 
-        app.MapControllers(); // Enables conventional routing
+        // Enables conventional routing
+        app.MapControllers(); 
 
         app.Run();
     }
