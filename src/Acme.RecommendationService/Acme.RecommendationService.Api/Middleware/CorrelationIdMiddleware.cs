@@ -12,7 +12,9 @@
 
         public async Task InvokeAsync(HttpContext context)
         {
-            if (!context.Request.Headers.TryGetValue(HeaderName, out var correlationId))
+            var correlationId = context.Request.Headers[HeaderName].FirstOrDefault();
+
+            if (string.IsNullOrEmpty(correlationId))
             {
                 correlationId = Guid.NewGuid().ToString();
                 context.Request.Headers[HeaderName] = correlationId;
@@ -20,10 +22,8 @@
 
             context.Response.Headers[HeaderName] = correlationId;
 
-            //// Store in HttpContext for Serilog
-            //context.Items[HeaderName] = correlationId;
-
-            //await _next(context);
+            //Store in HttpContext for Serilog
+            context.Items[HeaderName] = correlationId;
 
             // Push to Serilog
             using (Serilog.Context.LogContext.PushProperty("CorrelationId", correlationId))
