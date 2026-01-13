@@ -29,6 +29,8 @@ public partial class Program
         // Detect environment
         var env = builder.Environment.EnvironmentName;
 
+        Log.Information($"Environment: {env}");
+
         #region RabbitMQ / MassTransit
 
         // --- RabbitMQ / MassTransit --- keep this for local work on case
