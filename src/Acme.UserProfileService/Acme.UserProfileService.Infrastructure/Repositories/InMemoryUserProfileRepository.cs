@@ -7,8 +7,8 @@ namespace Acme.UserProfileService.Infrastructure.Repositories
     {
         private static readonly List<UserProfile> _db = new()
                 {
-                    new UserProfile( "Anita", "anita@example.com", 35),
-                    new UserProfile( "John", "john@example.com", 30),
+                    new UserProfile( "Paul", "paul@example.com", 35),
+                    new UserProfile( "Nick", "nick@example.com", 30),
                     new UserProfile( "Riya", "riya@example.com", 28),
                 };
 

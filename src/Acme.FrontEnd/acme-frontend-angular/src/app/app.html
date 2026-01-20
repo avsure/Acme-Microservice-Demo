@@ -1,9 +1,12 @@
-<h1>{{ title() }}</h1>
+<header class="header">
+  <h1>ACME Enterprise Platform</h1>
+  <nav>
+    <a routerLink="/products">Products</a>
+    <a routerLink="/users">Users</a>
+    <a routerLink="/recommendations">Recommendations</a>
+  </nav>
+</header>
 
-<nav style="margin-bottom: 20px;">
-  <a routerLink="/products">Products</a> |
-  <a routerLink="/users">Users</a> |
-  <a routerLink="/recommendations">Recommendations</a>
-</nav>
-
-<router-outlet></router-outlet>
+<main class="container">
+  <router-outlet></router-outlet>
+</main>

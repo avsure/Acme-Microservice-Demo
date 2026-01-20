@@ -1,15 +1,19 @@
 <h2>Products</h2>
 
-<!-- show loading state -->
-<div *ngIf="loading">Loading products…</div>
+<div class="grid">
+  <div class="card" *ngFor="let p of products; trackBy: trackById">
+    <h3>{{ p.name }}</h3>
+    <p>₹ {{ p.price }}</p>
+    <button (click)="viewRecommendations(p.id)">View Recommendations</button>
+  </div>
+</div>
 
-<!-- list when present -->
-<ul *ngIf="!loading && products?.length; else noItems">
-  <li *ngFor="let item of products; trackBy: trackById">
-    {{ item.name }} — ₹{{ item.price }}
-  </li>
-</ul>
+<hr>
 
-<ng-template #noItems>
-  <div *ngIf="!loading">No items to display.</div>
-</ng-template>
+<h3>Add Product</h3>
+
+<div class="card">
+  <input placeholder="Product Name" [(ngModel)]="newProduct.name">
+  <input placeholder="Price" type="number" [(ngModel)]="newProduct.price">
+  <button (click)="createProduct()">Create Product</button>
+</div>

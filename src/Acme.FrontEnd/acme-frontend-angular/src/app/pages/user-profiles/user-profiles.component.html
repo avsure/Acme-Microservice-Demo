@@ -1,0 +1,19 @@
+<h2>Users</h2>
+
+<div class="grid">
+  <div class="card" *ngFor="let u of users; trackBy: trackById">
+    <h3>{{ u.name }}</h3>
+    <p>{{ u.email }}</p>
+    <button (click)="loadUser(u.id)">View</button>
+  </div>
+</div>
+
+<hr>
+
+<h3>Add User</h3>
+<div class="card">
+  <input placeholder="Name" [(ngModel)]="newUser.name">
+  <input placeholder="Email" [(ngModel)]="newUser.email">
+  <input placeholder="Age" type="number" [(ngModel)]="newUser.age">
+  <button (click)="createUser()">Create User</button>
+</div>

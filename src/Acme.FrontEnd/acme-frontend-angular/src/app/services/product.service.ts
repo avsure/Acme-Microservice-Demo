@@ -9,6 +9,11 @@ export interface Product {
   price: number;
 }
 
+export interface CreateProductRequest {
+  name: string;
+  price: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -29,5 +34,9 @@ export class ProductService {
 
   getById(id: string): Observable<Product> {
     return this.http.get<Product>(`${this.productUrl}/${id}`);
+  }
+
+  create(request: CreateProductRequest): Observable<Product> {
+    return this.http.post<Product>(this.productUrl, request);
   }
 }

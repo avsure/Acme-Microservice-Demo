@@ -1,39 +1,34 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { UserProfileService, UserProfile } from '../../services/user-profile.service';
 
 @Component({
   selector: 'app-user-profiles',
   standalone: true,
-  imports: [CommonModule],
-  template: `
-    <h2>User Profiles</h2>
-
-    <!-- Loading indicator -->
-    <div *ngIf="loading">Loading users...</div>
-
-    <!-- Users list -->
-    <ul *ngIf="!loading && users?.length; else noUsers">
-      <li *ngFor="let u of users; trackBy: trackById">
-        {{ u.name }} {{ u.email }} ({{ u.age}})
-      </li>
-    </ul>
-
-    <ng-template #noUsers>
-      <div *ngIf="!loading">No users found.</div>
-    </ng-template>
-  `
+  imports: [CommonModule, FormsModule],
+  templateUrl: './user-profiles.component.html'
 })
 export class UserProfilesComponent implements OnInit {
+
   users: UserProfile[] = [];
   loading = true;
+
+  newUser: Partial<UserProfile> = {
+    name: '',
+    email: '',
+    age: 0
+  };
 
   constructor(private svc: UserProfileService) {}
 
   ngOnInit() {
+    this.loadUsers();
+  }
+
+  loadUsers() {
     this.svc.getAll().subscribe({
       next: (u) => {
-        console.log('Users received:', u);
         this.users = u;
         this.loading = false;
       },
@@ -41,6 +36,19 @@ export class UserProfilesComponent implements OnInit {
         console.error('Error loading users', err);
         this.loading = false;
       }
+    });
+  }
+
+  loadUser(id: string) {
+    this.svc.getById(id).subscribe(u => {
+      alert(`User: ${u.name}\nEmail: ${u.email}\nAge: ${u.age}`);
+    });
+  }
+
+  createUser() {
+    this.svc.create(this.newUser).subscribe(() => {
+      this.newUser = { name: '', email: '', age: 0 };
+      this.loadUsers();
     });
   }
 

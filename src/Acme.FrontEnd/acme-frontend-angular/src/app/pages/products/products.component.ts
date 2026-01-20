@@ -1,36 +1,61 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProductService, Product } from '../../services/product.service';
-
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { ProductService, Product, CreateProductRequest } from '../../services/product.service';
 
 @Component({
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   selector: 'app-products',
   templateUrl: './products.component.html'
 })
-
 export class ProductsComponent implements OnInit {
+
   products: Product[] = [];
   loading = true;
 
-  constructor(private productService: ProductService) {}
+  newProduct: CreateProductRequest = {
+    name: '',
+    price: 0
+  };
+
+  constructor(
+    private productService: ProductService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
+    this.loadProducts();
+  }
+
+  loadProducts(){
     this.productService.getAll().subscribe({
-      next: (p: Product[]) => { 
-      console.log("Products received", p);
-      this.products = p; 
-      this.loading = false; 
+      next: (p) => {
+        this.products = p;
+        this.loading = false;
       },
-      error: (err) => { 
+      error: (err) => {
         console.error('Error fetching products', err);
-        this.loading = false; }
+        this.loading = false;
+      }
     });
   }
 
-   // optional trackBy for ngFor performance
-  trackById(index: number, item: Product) {
-    return item?.id;
+  createProduct(){
+    this.productService.create(this.newProduct).subscribe(()=>{
+      this.newProduct = { name:'', price:0 };
+      this.loadProducts();
+    });
+  }
+
+  viewRecommendations(productId: string){
+    this.router.navigate(['/recommendations'], {
+      queryParams: { productId }
+    });
+  }
+
+  trackById(index: number, item: Product){
+    return item.id;
   }
 }
